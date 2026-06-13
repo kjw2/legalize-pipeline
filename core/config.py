@@ -15,11 +15,12 @@ LEGALIZE_KR_REPO = Path(os.environ.get("LEGALIZE_KR_REPO", str(WORKSPACE_ROOT / 
 PRECEDENT_KR_REPO = Path(os.environ.get("PRECEDENT_KR_REPO", str(WORKSPACE_ROOT / "precedent-kr"))).resolve()
 ADMRULE_KR_REPO = Path(os.environ.get("ADMRULE_KR_REPO", str(WORKSPACE_ROOT / "admrule-kr"))).resolve()
 ORDINANCE_KR_REPO = Path(os.environ.get("ORDINANCE_KR_REPO", str(WORKSPACE_ROOT / "ordinance-kr"))).resolve()
+CONSTITUTIONAL_KR_REPO = Path(os.environ.get("CONSTITUTIONAL_KR_REPO", str(WORKSPACE_ROOT / "constitutional-kr"))).resolve()
 LEGALIZE_WEB_REPO = Path(os.environ.get("LEGALIZE_WEB_REPO", str(WORKSPACE_ROOT / "legalize-web"))).resolve()
 COMPILER_REPO = Path(os.environ.get("COMPILER_REPO", str(WORKSPACE_ROOT / "compiler"))).resolve()
 
 # API
-LAW_API_BASE = "http://www.law.go.kr/DRF"
+LAW_API_BASE = os.environ.get("LAW_API_BASE", "http://www.law.go.kr/DRF")
 LAW_API_KEY = os.environ.get("LAW_OC", os.environ.get("LAW_API_KEY", ""))
 
 # Rate limiting

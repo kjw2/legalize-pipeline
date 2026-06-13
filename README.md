@@ -11,6 +11,7 @@
 | `core/` | 공유 인프라 (HTTP, 스로틀, 원자적 I/O, 카운터) |
 | `laws/` | 법령 수집·변환·검증 파이프라인 |
 | `precedents/` | 판례 수집 파이프라인 |
+| `constitutional/` | 헌재결정례 수집·변환·검증 파이프라인 |
 | `images/` | 법령 이미지 추출·다운로드 파이프라인 |
 
 자세한 사용법은 각 패키지의 README를 참조하세요.
@@ -125,7 +126,23 @@ python -m precedents.fetch_cache --limit 100
 python -m precedents.fetch_cache --workers 3
 ```
 
-### 4. 이미지 파이프라인
+### 4. 헌재결정례 파이프라인
+
+```bash
+# 전체 헌재결정례 수집
+python -m constitutional.fetch_cache
+
+# 캐시에서 Markdown 변환
+python -m constitutional.import_decisions
+
+# 최근 14일 증분 업데이트
+python -m constitutional.update --days 14 --commit
+
+# 검증
+python -m constitutional.validate "$CONSTITUTIONAL_KR_REPO"
+```
+
+### 5. 이미지 파이프라인
 
 ```bash
 # 이미지 추출
@@ -150,6 +167,7 @@ LEGALIZE-KR-WORKSPACE-ROOT/
     metadata.json                 # 법령 인덱스 (자동 생성)
     stats.json                    # 통계 (자동 생성)
   precedent-kr/                   # 판례 Markdown 저장소
+  constitutional-kr/              # 헌재결정례 Markdown 저장소
   admrule-kr/                     # 행정규칙 Markdown 저장소
   ordinance-kr/                   # 자치법규 Markdown 저장소
   legalize-web/                   # 웹사이트 저장소
@@ -157,6 +175,7 @@ LEGALIZE-KR-WORKSPACE-ROOT/
     detail/{MST}.xml              # 법령 상세 API XML
     history/{법령명}.json         # 법령 개정 이력
     precedent/{판례일련번호}.xml  # 판례 상세 API XML
+    detc/{헌재결정례일련번호}.xml # 헌재결정례 상세 API XML
     admrule/{행정규칙일련번호}.xml
     ordinance/{자치법규ID}.xml
     images/                       # 이미지 캐시
@@ -248,6 +267,7 @@ WORKSPACE_ROOT=/path/to/LEGALIZE-KR-WORKSPACE-ROOT
 LEGALIZE_CACHE_DIR=/path/to/cache
 LEGALIZE_KR_REPO=/path/to/legalize-kr
 PRECEDENT_KR_REPO=/path/to/precedent-kr
+CONSTITUTIONAL_KR_REPO=/path/to/constitutional-kr
 ADMRULE_KR_REPO=/path/to/admrule-kr
 ORDINANCE_KR_REPO=/path/to/ordinance-kr
 ```

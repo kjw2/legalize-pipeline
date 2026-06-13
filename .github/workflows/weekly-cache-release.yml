@@ -89,7 +89,7 @@ jobs:
       - name: Build archive with split
         run: |
           cd "$WORKSPACE_ROOT"
-          tar --use-compress-program="zstd -22 --long=27 -T0" -cf - -C .cache detail history precedent images admrule ordinance \
+          tar --use-compress-program="zstd -22 --long=27 -T0" -cf - -C .cache detail history precedent detc images admrule ordinance \
             | split -b 1900M -d -a 3 - "$GITHUB_WORKSPACE/staging/${TAG}.tar.zst.part"
 
       - name: Generate manifest

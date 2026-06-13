@@ -1,0 +1,99 @@
+name: Daily Constitutional Decisions Update
+
+on:
+  schedule:
+    - cron: '30 11 * * *' # 20:30 KST (UTC+9)
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Lookback days'
+        required: false
+        default: '14'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: workspace-cache
+  cancel-in-progress: false
+
+env:
+  WORKSPACE_ROOT: ${{ github.workspace }}/LEGALIZE-KR-WORKSPACE-ROOT
+  LEGALIZE_CACHE_DIR: ${{ secrets.LEGALIZE_CACHE_DIR }}
+  CONSTITUTIONAL_KR_REPO: ${{ github.workspace }}/LEGALIZE-KR-WORKSPACE-ROOT/constitutional-kr
+  PIPELINE_REPO: ${{ github.workspace }}/LEGALIZE-KR-WORKSPACE-ROOT/legalize-pipeline
+
+jobs:
+  update:
+    runs-on: self-hosted
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout constitutional decisions repo
+        uses: actions/checkout@v6
+        with:
+          repository: kjw2/constitutional-kr
+          token: ${{ secrets.REPO_PAT }}
+          fetch-depth: 0
+          path: LEGALIZE-KR-WORKSPACE-ROOT/constitutional-kr
+
+      - name: Checkout pipeline
+        uses: actions/checkout@v6
+        with:
+          path: LEGALIZE-KR-WORKSPACE-ROOT/legalize-pipeline
+
+      - name: Link persistent cache
+        run: |
+          if [ -z "${LEGALIZE_CACHE_DIR:-}" ]; then
+            echo "::error::LEGALIZE_CACHE_DIR is not configured"
+            exit 1
+          fi
+          mkdir -p "$WORKSPACE_ROOT"
+          mkdir -p "$LEGALIZE_CACHE_DIR"
+          rm -rf "$WORKSPACE_ROOT/.cache"
+          ln -s "$LEGALIZE_CACHE_DIR" "$WORKSPACE_ROOT/.cache"
+
+      - name: Setup Python venv
+        run: |
+          python3 -m venv "$WORKSPACE_ROOT/.venv"
+          . "$WORKSPACE_ROOT/.venv/bin/activate"
+          pip install -r "$PIPELINE_REPO/requirements.txt"
+
+      - name: Configure git
+        working-directory: ${{ env.CONSTITUTIONAL_KR_REPO }}
+        run: |
+          git config user.name "legalize-kr-bot"
+          git config user.email "bot@legalize.kr"
+
+      - name: Run constitutional decisions update
+        working-directory: ${{ env.PIPELINE_REPO }}
+        env:
+          LAW_OC: ${{ secrets.LAW_OC }}
+        run: |
+          . "$WORKSPACE_ROOT/.venv/bin/activate"
+          python -m constitutional.update \
+            --days ${{ inputs.days || '14' }} \
+            --output-dir "$CONSTITUTIONAL_KR_REPO" \
+            --commit \
+            --refresh-recent
+
+      - name: Validate
+        working-directory: ${{ env.PIPELINE_REPO }}
+        run: |
+          . "$WORKSPACE_ROOT/.venv/bin/activate"
+          python -m constitutional.validate "$CONSTITUTIONAL_KR_REPO"
+
+      - name: Push changes
+        working-directory: ${{ env.CONSTITUTIONAL_KR_REPO }}
+        run: |
+          if [ -n "$(git log origin/main..HEAD --oneline)" ]; then
+            for attempt in 1 2 3; do
+              git push && exit 0
+              if [ "$attempt" = 3 ]; then
+                exit 1
+              fi
+              sleep $((attempt * 10))
+            done
+          else
+            echo "No new commits to push"
+          fi

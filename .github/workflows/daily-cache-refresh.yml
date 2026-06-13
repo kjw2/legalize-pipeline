@@ -82,6 +82,14 @@ jobs:
           . "$WORKSPACE_ROOT/.venv/bin/activate"
           python -m precedents.fetch_cache
 
+      - name: Fetch constitutional decisions cache
+        working-directory: ${{ env.PIPELINE_REPO }}
+        env:
+          LAW_OC: ${{ secrets.LAW_OC }}
+        run: |
+          . "$WORKSPACE_ROOT/.venv/bin/activate"
+          python -m constitutional.fetch_cache
+
       - name: Fetch administrative rules cache
         working-directory: ${{ env.PIPELINE_REPO }}
         env:
@@ -108,7 +116,7 @@ jobs:
           baseline_file="$LEGALIZE_CACHE_DIR/.cache-baseline.json"
           # Note: legitimate count drops can come from law repeals (detail/), _no_result_ids.txt pruning (precedent/), or upstream cache invalidation. 1% tolerance band absorbs these.
           pass=true
-          for subdir in detail history precedent images admrule ordinance; do
+          for subdir in detail history precedent detc images admrule ordinance; do
             new=$(find "$LEGALIZE_CACHE_DIR/$subdir" -type f 2>/dev/null | wc -l | tr -d ' ')
             echo "Cache $subdir: $new files"
             if [ -f "$baseline_file" ]; then
@@ -125,7 +133,7 @@ jobs:
           python3 - <<'PYTHON_EOF'
           import json, os, subprocess, pathlib
           counts = {}
-          for subdir in ["detail", "history", "precedent", "images", "admrule", "ordinance"]:
+          for subdir in ["detail", "history", "precedent", "detc", "images", "admrule", "ordinance"]:
               result = subprocess.run(
                   ["find", f"{os.environ['LEGALIZE_CACHE_DIR']}/{subdir}", "-type", "f"],
                   capture_output=True, text=True

@@ -1,6 +1,7 @@
 """Shared HTTP request with throttle, retry, and exponential backoff."""
 
 import logging
+import re
 import time
 
 import requests
@@ -8,6 +9,10 @@ import requests
 from .throttle import Throttle
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_url_secrets(text: str) -> str:
+    return re.sub(r"([?&]OC=)[^&\s)]+", r"\1***", text)
 
 
 def make_request(
@@ -37,7 +42,13 @@ def make_request(
             if attempt == max_retries:
                 raise
             wait = backoff_base * (2 ** attempt)
-            logger.warning(f"Request failed: {e}. Retry {attempt + 1}/{max_retries} in {wait}s")
+            logger.warning(
+                "Request failed: %s. Retry %s/%s in %ss",
+                _redact_url_secrets(str(e)),
+                attempt + 1,
+                max_retries,
+                wait,
+            )
             time.sleep(wait)
 
     raise RuntimeError(f"Exceeded {max_retries} retries for {url}")

@@ -53,11 +53,13 @@ def _guard_against_shared_cache_pollution():
     """
     import laws.cache as law_cache
     import precedents.cache as prec_cache
+    import constitutional.cache as detc_cache
 
     guarded: list[tuple[str, Path]] = [
         ("laws.cache.CACHE_DIR/history", law_cache.CACHE_DIR / "history"),
         ("laws.cache.CACHE_DIR/detail", law_cache.CACHE_DIR / "detail"),
         ("precedents.cache.PREC_CACHE_DIR", prec_cache.PREC_CACHE_DIR),
+        ("constitutional.cache.CACHE_DIR", detc_cache.CACHE_DIR),
     ]
     snapshots = [(label, d, _snapshot_dir(d)) for label, d in guarded]
 

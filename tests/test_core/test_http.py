@@ -6,7 +6,7 @@ import pytest
 import responses as responses_lib
 from requests.exceptions import ConnectionError
 
-from core.http import make_request
+from core.http import _redact_url_secrets, make_request
 from core.throttle import Throttle
 
 LAW_API_BASE = "http://www.law.go.kr/DRF"
@@ -16,6 +16,15 @@ TEST_URL = f"{LAW_API_BASE}/lawSearch.do"
 def _throttle() -> Throttle:
     t = Throttle(delay_seconds=0)
     return t
+
+
+def test_redact_url_secrets_masks_oc_parameter():
+    text = "failed for /lawSearch.do?target=detc&OC=secret-key&display=100"
+
+    redacted = _redact_url_secrets(text)
+
+    assert "secret-key" not in redacted
+    assert "OC=***" in redacted
 
 
 @responses_lib.activate

@@ -47,7 +47,7 @@ def collect_parts(staging: Path) -> list[dict]:
 
 def collect_files(cache_root: Path) -> tuple[list[dict], dict]:
     """Walk cache_root, return (files[], subdirs{}) with per-top-level-subdir aggregation."""
-    known_subdirs = ("detail", "history", "precedent", "images")
+    known_subdirs = ("detail", "history", "precedent", "detc", "images", "admrule", "ordinance")
     subdirs: dict[str, dict] = {k: {"file_count": 0, "bytes": 0} for k in known_subdirs}
     files = []
 
@@ -98,8 +98,9 @@ def collect_source_commits(cache_root: Path) -> dict:
 
     return {
         "legalize-pipeline": git_head(pipeline_root),
-        "legalize-kr": git_head(workspace_root),
-        "precedent-kr": git_head(workspace_root.parent / "precedent-kr"),
+        "legalize-kr": git_head(workspace_root / "legalize-kr"),
+        "precedent-kr": git_head(workspace_root / "precedent-kr"),
+        "constitutional-kr": git_head(workspace_root / "constitutional-kr"),
     }
 
 
@@ -175,7 +176,7 @@ def render_markdown(manifest: dict, date_str: str) -> str:
         "```sh",
         f"# 모든 파트를 한 번에 해제하여 워크스페이스 루트에 풀기",
         f"cat {tag}.tar.zst.part* | zstd -d --long=27 -T0 | tar -xf -",
-        "# .cache/detail/, .cache/history/, .cache/precedent/, .cache/images/, .cache/admrule/, .cache/ordinance/ 가 생성됩니다",
+        "# .cache/detail/, .cache/history/, .cache/precedent/, .cache/detc/, .cache/images/, .cache/admrule/, .cache/ordinance/ 가 생성됩니다",
         "```",
         "",
         "> **주의:** 파트 파일 중 하나라도 누락되면 압축 해제가 실패합니다.",
@@ -204,6 +205,7 @@ def render_markdown(manifest: dict, date_str: str) -> str:
         "  detail/{MST}.xml             # 법령 상세 API 원본 XML",
         "  history/{법령명}.json         # 법령별 개정 이력",
         "  precedent/{판례일련번호}.xml  # 판례 상세 API 원본 XML",
+        "  detc/{헌재결정례일련번호}.xml # 헌재결정례 상세 API 원본 XML",
         "  images/                       # 법령 이미지",
         "```",
         "",

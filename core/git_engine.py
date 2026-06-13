@@ -20,11 +20,13 @@ def _run_git(*args: str, cwd: Path, env: dict | None = None) -> str:
         cwd=cwd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         env=merged_env,
     )
     if result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return (result.stdout or "").strip()
 
 
 def file_has_changes(repo_dir: Path, file_paths: list[Path]) -> bool:
